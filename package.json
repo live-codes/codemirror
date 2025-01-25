@@ -42,7 +42,6 @@
     "@types/node": "20.14.10",
     "@valtown/codemirror-codeium": "1.0.1",
     "@valtown/codemirror-ts": "2.1.2",
-    "codemirror": "6.0.1",
     "esbuild": "0.24.2",
     "typescript": "5.7.3"
   },
