@@ -1,6 +1,6 @@
 {
   "name": "@live-codes/codemirror",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "A custom build of CodeMirror6 for use in LiveCodes",
   "author": "Hatem Hosny",
   "license": "MIT",

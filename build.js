@@ -99,7 +99,6 @@ const build = () => {
       "codemirror-emmet.ts",
       "codemirror-codeium.ts",
       "codemirror-line-numbers-relative.ts",
-      "languages/codemirror-lang-json.ts",
       "languages/codemirror-lang-markdown.ts",
       "languages/codemirror-lang-python.ts",
       "languages/codemirror-lang-scss.ts",
@@ -126,7 +125,30 @@ const build = () => {
     ]
       .map((x) => srcDir + x)
       .reduce(arrToObj, {}),
-    external: ["@codemirror/*", "@lezer/*", "typescript"],
+    external: [
+      // already included in codemirror-core.ts
+      "codemirror",
+      "@codemirror/autocomplete",
+      "@codemirror/commands",
+      "@codemirror/language",
+      "@codemirror/lint",
+      "@codemirror/search",
+      "@codemirror/state",
+      "@codemirror/view",
+      "@codemirror/lang-html",
+      "@codemirror/lang-css",
+      "@codemirror/lang-javascript",
+      "@codemirror/lang-json",
+      "@codemirror/theme-one-dark",
+      "@lezer/common",
+      "@lezer/highlight",
+      "@lezer/lr",
+      "@replit/codemirror-indentation-markers",
+      "@replit/codemirror-vscode-keymap",
+      "@replit/codemirror-css-color-picker",
+      // should be provided separately
+      "typescript",
+    ],
   });
 };
 
