@@ -40,6 +40,23 @@ const patchTS = async () => {
   });
 };
 
+const patchConsole = (/** @type {string} */ filePath) =>
+  new Promise((resolve, reject) => {
+    fs.readFile(path.resolve(filePath), "utf8", function (err, data) {
+      if (err) return reject(err);
+      const patchedConsole = `const console={log:()=>{},error:()=>{},warn:()=>{},info:()=>{}};`;
+      fs.writeFile(
+        path.resolve(filePath),
+        patchedConsole + data,
+        "utf8",
+        function (err) {
+          if (err) return reject(err);
+          resolve("done");
+        }
+      );
+    });
+  });
+
 const build = () => {
   const srcDir = "src/";
   const outputDir = "build/";
@@ -122,6 +139,8 @@ const build = () => {
       "languages/codemirror-lang-vue.ts",
       "languages/codemirror-lang-rust.ts",
       "languages/codemirror-lang-swift.ts",
+      "languages/codemirror-lang-liquid.ts",
+      "languages/codemirror-lang-svelte.ts",
     ]
       .map((x) => srcDir + x)
       .reduce(arrToObj, {}),
@@ -150,6 +169,8 @@ const build = () => {
       "typescript",
     ],
   });
+
+  patchConsole("./build/codemirror-codeium.js");
 };
 
 patchTS().then(build);
