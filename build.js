@@ -122,6 +122,7 @@ const build = () => {
       "languages/codemirror-lang-coffeescript.ts",
       "languages/codemirror-lang-livescript.ts",
       "languages/codemirror-lang-php.ts",
+      "languages/codemirror-lang-java.ts",
       "languages/codemirror-lang-cpp.ts",
       "languages/codemirror-lang-sql.ts",
       "languages/codemirror-lang-wast.ts",
