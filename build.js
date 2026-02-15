@@ -4,7 +4,7 @@ import { buildSync } from "esbuild";
 
 const patch = (
   /** @type {string} */ filePath,
-  /** @type {Record<string, string>} */ replacements = {}
+  /** @type {Record<string, string>} */ replacements = {},
 ) =>
   new Promise((resolve, reject) => {
     fs.readFile(path.resolve(filePath), "utf8", function (err, data) {
@@ -29,7 +29,7 @@ const patchTS = async () => {
     {
       'import ts from "typescript";': "",
       "ts.ScriptElementKind.warning": '"warning"',
-    }
+    },
   );
   await patch("./node_modules/@valtown/codemirror-ts/dist/esm/lint/utils.js", {
     'import ts from "typescript";': "",
@@ -52,7 +52,7 @@ const patchConsole = (/** @type {string} */ filePath) =>
         function (err) {
           if (err) return reject(err);
           resolve("done");
-        }
+        },
       );
     });
   });
@@ -146,6 +146,7 @@ const build = () => {
       "languages/codemirror-lang-svelte.ts",
       "languages/codemirror-lang-minizinc.ts",
       "languages/codemirror-lang-prolog.ts",
+      "languages/codemirror-lang-yaml.ts",
     ]
       .map((x) => srcDir + x)
       .reduce(arrToObj, {}),
