@@ -28,3 +28,5 @@ export * from "./codemirror-basic-setup";
 export * from "@replit/codemirror-css-color-picker";
 export * from "@replit/codemirror-indentation-markers";
 export * from "@replit/codemirror-vscode-keymap";
+
+export * from "./rainbowbrackets";
