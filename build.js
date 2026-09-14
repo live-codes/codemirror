@@ -149,6 +149,10 @@ const build = () => {
       "languages/codemirror-lang-yaml.ts",
       "languages/codemirror-lang-haskell.ts",
       "languages/codemirror-lang-elm.ts",
+      "languages/codemirror-lang-haxe.ts",
+      "languages/codemirror-lang-erlang.ts",
+      "languages/codemirror-lang-cobol.ts",
+      "languages/codemirror-lang-vb.ts",
     ]
       .map((x) => srcDir + x)
       .reduce(arrToObj, {}),
