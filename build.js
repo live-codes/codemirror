@@ -153,6 +153,10 @@ const build = () => {
       "languages/codemirror-lang-erlang.ts",
       "languages/codemirror-lang-cobol.ts",
       "languages/codemirror-lang-vb.ts",
+      "languages/codemirror-lang-crystal.ts",
+      "languages/codemirror-lang-d.ts",
+      "languages/codemirror-lang-fortran.ts",
+      "languages/codemirror-lang-pascal.ts",
     ]
       .map((x) => srcDir + x)
       .reduce(arrToObj, {}),
