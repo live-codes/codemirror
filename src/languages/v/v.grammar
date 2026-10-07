@@ -1,0 +1,290 @@
+// V language grammar (Lezer) for CodeMirror 6
+//
+// Modeled on the Lezer Go grammar (MIT) and adapted to the V language.
+// Statement separation relies on automatic semicolon insertion, implemented
+// in ./v.tokens.
+
+@precedence {
+  unary
+  mult @left
+  add @left
+  compare @left
+  and @left
+  or @left
+  range @left
+  orblock
+  convert
+  dot
+  index
+  call
+  else @right
+}
+
+@top SourceFile {
+  (ModuleClause semi)?
+  (ImportDecl semi)*
+  (Preprocessor semi)*
+  semiSep<statement>
+}
+
+@skip { space | LineComment | BlockComment }
+
+TypeName[@dynamicPrecedence=-1] { identifier ~identifier }
+typeName { QualifiedType { (VariableName ~dot ".")+ TypeName } | TypeName }
+VariableName { identifier ~identifier }
+DefName { identifier ~identifier }
+FieldName { identifier ~identifier }
+
+TypeArgs[@dynamicPrecedence=2] { "[" commaSep1<type> "]" }
+TypeParams[@dynamicPrecedence=-1] { "[" commaSep1<TypeParam> "]" }
+TypeParam { DefName type? }
+
+type[@isGroup=Type] {
+  PointerType { star ~star type } |
+  ArrayType { "[" ( Number | VariableName )? "]" type } |
+  MapType { kw<"map"> "[" type "]" type } |
+  FnType { kw<"fn"> signature } |
+  SharedType { kw<"shared"> type } |
+  AtomicType { kw<"atomic"> type } |
+  OptionType { "?" type } |
+  ResultType { "!" type } |
+  ParameterizedType |
+  typeName
+}
+
+ParameterizedType { typeName TypeArgs }
+
+literalType {
+  StructType { kw<"struct"> "{" (FieldDecl semi)* "}" } |
+  SliceType { "[" "]" type } |
+  MapType { kw<"map"> "[" type "]" type } |
+  ParameterizedType |
+  typeName
+}
+
+FieldDecl { ( FieldName ("," FieldName)* type | star? ( typeName | ParameterizedType ) ) ("=" expr)? }
+
+StructItem { attribute* ( StructSection | FieldDecl ) }
+
+StructSection { ( Visibility kw<"mut"> | Visibility | kw<"mut"> ) ":" }
+
+signature { Parameters ~paren (Parameters | type)? }
+
+Parameters { "(" commaSep<Parameter> ")" }
+
+Parameter { idList? "..."? type }
+
+Block[@dynamicPrecedence=1] { "{" semiSep<statement> "}" }
+
+SpecList<spec> { "(" (spec semi)* ")" }
+
+ConstSpec { idList "=" valueList }
+ConstDecl { attribute* Visibility? kw<"const"> ( ConstSpec | SpecList<ConstSpec> ) }
+
+TypeSpec { DefName "=" type }
+TypeDecl { attribute* Visibility? kw<"type"> ( TypeSpec | SpecList<TypeSpec> ) }
+
+FunctionDecl { attribute* Visibility? kw<"fn"> DefName TypeParams? signature Block? }
+MethodDecl { attribute* Visibility? kw<"fn"> Parameters FieldName TypeParams? signature Block? }
+
+StructDecl { attribute* Visibility? kw<"struct"> DefName TypeParams? "{" (StructItem semi)* "}" }
+
+EnumDecl { attribute* Visibility? kw<"enum"> DefName (kw<"as"> type)? "{" (EnumField semi)* "}" }
+EnumField { attribute* DefName ("=" expr)? }
+
+InterfaceDecl { attribute* Visibility? kw<"interface"> DefName "{" (InterfaceElem semi)* "}" }
+InterfaceElem { attribute* ( MethodElem | typeName ) }
+MethodElem { FieldName signature }
+
+ImportDecl { kw<"import"> ( ImportSpec | SpecList<ImportSpec> ) }
+ImportSpec { DefName ("." DefName)* (kw<"as"> DefName)? }
+
+ModuleClause { kw<"module"> DefName }
+
+Visibility { kw<"pub"> }
+
+attribute { "[" attributePart+ "]" }
+
+attributePart {
+  kw<"unsafe"> | kw<"if"> | identifier | Number | String |
+  ":" | ";" | "," | "="
+}
+
+Preprocessor { PreprocessorLine }
+
+statement[@isGroup=Statement] {
+  DeclStatement |
+  simpleStatement |
+  ForStatement |
+  ReturnStatement |
+  BranchStatement |
+  DeferStatement |
+  GoStatement |
+  LockStatement |
+  CompileStatement |
+  AssertStatement
+}
+
+DeclStatement {
+  FunctionDecl | MethodDecl |
+  StructDecl | EnumDecl | InterfaceDecl |
+  TypeDecl | ConstDecl
+}
+
+ForStatement { kw<"for"> ( ForClause | ForIn | expr )? Block }
+ForClause { simpleStatement semi expr? semi simpleStatement }
+ForIn { idList kw<"in"> valueExpr }
+
+ReturnStatement { kw<"return"> valueList? }
+BranchStatement { ( kw<"break"> | kw<"continue"> ) LabelName? }
+DeferStatement { kw<"defer"> ( Block | ExprStatement ) }
+GoStatement { ( kw<"go"> | kw<"spawn"> ) expr }
+LockStatement { ( kw<"lock"> | kw<"rlock"> ) Block }
+CompileStatement { CompileIf | CompileFor }
+CompileIf { DollarIf expr Block (DollarElse (CompileIf | Block))? }
+CompileFor { DollarFor ForIn Block }
+AssertStatement { kw<"assert"> expr ("," expr)? }
+
+LabelName { identifier }
+
+simpleStatement { ExprStatement | Assignment | IncDecStatement | shortVarDecl }
+
+ExprStatement { expr }
+
+Assignment { exprList ("=" | UpdateOp) valueList }
+IncDecStatement { expr IncDecOp }
+shortVarDecl[@name=Assignment] { kw<"mut">? idList ~shortvar ":=" valueList }
+
+expr[@isGroup=Expr] {
+  Literal |
+  VariableName |
+  CompileBuiltin |
+  Bool |
+  Nil |
+  ParenthesizedExpr { "(" valueExpr ")" } |
+  TypedLiteral { literalType !convert LiteralValue } |
+  SelectorExpr { expr !dot ~dot "." FieldName } |
+  IndexExpr { expr !index ~bracket "[" expr "]" } |
+  CallExpr { expr !call Arguments } |
+  UnaryExpr { ( ArithOp<"+" | "-"> | LogicOp<"!"> | BitOp<"~"> | DerefOp<"*" ~star | "&"> ) !unary expr } |
+  BinaryExpr {
+    expr !mult ( ArithOp<"*" | "/" | "%"> | BitOp<"<<" | ">>" | "&" | "&^"> ) expr |
+    expr !add ( ArithOp<"+" | "-"> | BitOp<"|" | "^"> ) expr |
+    expr !compare CompareOp expr |
+    expr !and LogicOp<"&&"> expr |
+    expr !or LogicOp<"||"> expr
+  } |
+  RangeExpr { expr !range ".." expr } |
+  IfExpr |
+  MatchExpr |
+  UnsafeExpr |
+  FnLiteral |
+  OrExpr { expr !orblock kw<"or"> Block }
+}
+
+IfExpr { kw<"if"> expr Block (!else kw<"else"> (IfExpr | Block))? }
+MatchExpr { kw<"match"> valueExpr MatchBody }
+FnLiteral { kw<"fn"> signature Block }
+UnsafeExpr { kw<"unsafe"> Block }
+CompileBuiltin { DollarIdent }
+
+MatchBody { "{" (MatchCase semi)* "}" }
+MatchCase { ( kw<"else"> | valueList ) Block }
+
+Arguments { "(" ( valueList "..."? )? ")" }
+
+LiteralValue[@dynamicPrecedence=-1] { "{" elementList? "}" }
+
+BareLiteralValue[@dynamicPrecedence=-1] { "{" elementList "}" }
+
+valueExpr { BareLiteralValue | ArrayLiteral | expr }
+
+ArrayLiteral { "[" commaSep1<Element> "]" }
+
+valueList { Element ("," Element)* }
+
+elementList { Element ( ( "," | semi ) Element )* ( "," | semi )? }
+
+Element { "..."? ( ElementKey ":" )? valueExpr }
+
+ElementKey { FieldName | Literal }
+
+Literal { Number | String | Rune }
+
+Bool { @specialize<identifier, "true" | "false"> }
+Nil { @specialize<identifier, "none"> }
+
+DerefOp<expr> { expr }
+LogicOp<expr> { expr }
+ArithOp<expr> { expr }
+BitOp<expr> { expr }
+
+UpdateOp { ArithOp<"+=" | "-=" | "*=" | "/=" | "%="> | BitOp<"&=" | "|=" | "^=" | "<<=" | ">>="> }
+
+IncDecOp { "++" | "--" }
+
+CompareOp { "==" | "!=" | "<" | "<=" | ">" | ">=" }
+
+kw<term> { @specialize[@name={term}]<identifier, term> }
+
+star[@name="*"] { "*" }
+
+commaSep<expr> { (expr ("," expr)*)? ","? }
+commaSep1<expr> { expr ("," expr)* ","? }
+semiSep<expr> { (expr semi | ";")* }
+exprList { expr ("," expr)* }
+idList { DefName ~ids ("," DefName ~ids)* }
+
+semi { ";" | insertedSemi }
+
+@external tokens semicolon from "./v.tokens" { insertedSemi }
+
+@external tokens blockComment from "./v.tokens" { BlockComment }
+
+@context trackTokens from "./v.tokens"
+
+@tokens {
+  space[@export] { $[ \t\n\r]+ }
+
+  LineComment { "//" ![\n]* }
+
+  PreprocessorLine { "#" ![\n]* }
+
+  @precedence { LineComment "/" }
+
+  digit { $[0-9] }
+  hexDigit { $[0-9a-fA-F] }
+
+  decimalNumber {
+    ( digit ( "_"? digit )* ( "." ( digit ( "_"? digit )* )? )? ) ( $[eE] $[+-]? ( digit )+ )?
+  }
+  hexNumber { "0" $[xX] ( "_"? hexDigit )+ }
+  octNumber { "0" $[oO] ( "_"? $[0-7] )+ }
+  binNumber { "0" $[bB] ( "_"? $[01] )+ }
+
+  Number { decimalNumber | hexNumber | octNumber | binNumber }
+
+  Rune[isolate] { "`" ( "\\" _ | ![`\n] )* "`"? }
+
+  String[isolate] { ("r" | "c")? ( "'" ( "\\" _ | !['\\\n] )* "'"? | '"' ( "\\" _ | ![\\"\n] )* '"'? ) }
+
+  letter { $[_a-zA-Z] }
+
+  identifier[@export] { letter ( letter | digit )* }
+
+  DollarIdent { "$" letter ( letter | digit )* }
+  DollarIf { "$if" }
+  DollarElse { "$else" }
+  DollarFor { "$for" }
+
+  @precedence { DollarIf, DollarElse, DollarFor, DollarIdent }
+
+  @precedence { Number, identifier, String }
+
+  "<-" "=" ":=" ";" ":"[@export=colon] "..." "." "," "?" "!"
+  "(" ")"[@export=closeParen]
+  "{" "}"[@export=closeBrace]
+  "[" "]"[@export=closeBracket]
+}
+
+@detectDelim

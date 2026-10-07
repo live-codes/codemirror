@@ -1,6 +1,19 @@
 import fs from "fs";
 import path from "path";
 import { buildSync } from "esbuild";
+import { buildParserFile } from "@lezer/generator";
+
+const buildVGrammar = () => {
+  const fileName = "./src/languages/v/v.grammar";
+  const grammar = fs.readFileSync(path.resolve(fileName), "utf8");
+  const { parser, terms } = buildParserFile(grammar, {
+    fileName,
+    moduleStyle: "es",
+    warn: (message) => console.warn(message),
+  });
+  fs.writeFileSync(path.resolve("./src/languages/v/v.parser.js"), parser, "utf8");
+  fs.writeFileSync(path.resolve("./src/languages/v/v.parser.terms.js"), terms, "utf8");
+};
 
 const patch = (
   /** @type {string} */ filePath,
@@ -150,6 +163,7 @@ const build = () => {
       "languages/codemirror-lang-haskell.ts",
       "languages/codemirror-lang-elm.ts",
       "languages/codemirror-lang-haxe.ts",
+      "languages/codemirror-lang-elixir.ts",
       "languages/codemirror-lang-erlang.ts",
       "languages/codemirror-lang-cobol.ts",
       "languages/codemirror-lang-vb.ts",
@@ -157,6 +171,8 @@ const build = () => {
       "languages/codemirror-lang-d.ts",
       "languages/codemirror-lang-fortran.ts",
       "languages/codemirror-lang-pascal.ts",
+      "languages/codemirror-lang-nim.ts",
+      "languages/codemirror-lang-v.ts",
     ]
       .map((x) => srcDir + x)
       .reduce(arrToObj, {}),
@@ -189,4 +205,7 @@ const build = () => {
   patchConsole("./build/codemirror-codeium.js");
 };
 
-patchTS().then(build);
+patchTS().then(() => {
+  buildVGrammar();
+  build();
+});
