@@ -146,6 +146,7 @@ const build = () => {
       "languages/codemirror-lang-perl.ts",
       "languages/codemirror-lang-lua.ts",
       "languages/codemirror-lang-r.ts",
+      "languages/codemirror-lang-janet.ts",
       "languages/codemirror-lang-julia.ts",
       "languages/codemirror-lang-scheme.ts",
       "languages/codemirror-lang-clojure.ts",

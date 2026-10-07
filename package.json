@@ -1,6 +1,6 @@
 {
   "name": "@live-codes/codemirror",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "A custom build of CodeMirror6 for use in LiveCodes",
   "author": "Hatem Hosny",
   "license": "MIT",
@@ -50,6 +50,7 @@
     "@valtown/codemirror-codeium": "1.1.1",
     "@valtown/codemirror-ts": "2.3.1",
     "codemirror-lang-elixir": "^4.0.1",
+    "codemirror-lang-janet": "^0.7.2",
     "codemirror-lang-nim": "0.1.0",
     "codemirror-lang-prolog": "0.1.0",
     "esbuild": "0.24.2",
