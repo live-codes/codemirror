@@ -11,8 +11,16 @@ const buildVGrammar = () => {
     moduleStyle: "es",
     warn: (message) => console.warn(message),
   });
-  fs.writeFileSync(path.resolve("./src/languages/v/v.parser.js"), parser, "utf8");
-  fs.writeFileSync(path.resolve("./src/languages/v/v.parser.terms.js"), terms, "utf8");
+  fs.writeFileSync(
+    path.resolve("./src/languages/v/v.parser.js"),
+    parser,
+    "utf8",
+  );
+  fs.writeFileSync(
+    path.resolve("./src/languages/v/v.parser.terms.js"),
+    terms,
+    "utf8",
+  );
 };
 
 const patch = (
@@ -174,6 +182,7 @@ const build = () => {
       "languages/codemirror-lang-pascal.ts",
       "languages/codemirror-lang-nim.ts",
       "languages/codemirror-lang-v.ts",
+      "languages/codemirror-lang-odin.ts",
     ]
       .map((x) => srcDir + x)
       .reduce(arrToObj, {}),
